@@ -1,0 +1,75 @@
+/* ===== GLOBAL PAGE ===== */
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* background-image: url("../../../public/background_task.jpg"); */
+  background-size: cover;
+  background-position: center;
+}
+
+/* ===== HERO SECTION ===== */
+
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* Glass style card */
+.hero-card {
+  max-width: 700px;
+  width: 100%;
+  padding: 50px;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px);
+
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+/* ===== TEXT ===== */
+
+.hero-card h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: #1b2a41;
+}
+
+.hero-card p {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+}
+
+/* ===== BUTTON ===== */
+
+.hero-card button {
+  margin-top: 20px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  border-radius: 8px;
+  transition: 0.25s ease;
+}
+
+.hero-card button:hover {
+  transform: translateY(-2px);
+}
+
+/* ===== FOOTER ===== */
+
+footer {
+  text-align: center;
+  padding: 15px;
+  background-color: #a3e4d4;
+}

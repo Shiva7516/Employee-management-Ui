@@ -1,0 +1,43 @@
+<div class="login-container">
+
+  <div class="login-left">
+    <h1>Employee Management</h1>
+    <p>Manage tasks, teams, and productivity efficiently</p>
+  </div>
+
+  <mat-card class="login-card">
+
+    <mat-card-title>Welcome Back 👋</mat-card-title>
+
+    <form (ngSubmit)="login()" #form="ngForm">
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Username</mat-label>
+        <mat-icon matPrefix>person</mat-icon>
+        <input matInput [(ngModel)]="username" name="username" required>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <mat-icon matPrefix>lock</mat-icon>
+        <input matInput type="password" [(ngModel)]="password" name="password" required>
+      </mat-form-field>
+
+      <button mat-raised-button
+              color="primary"
+              class="full-width login-btn"
+              type="submit"
+              [disabled]="form.invalid || loading">
+        <span *ngIf="!loading">Login</span>
+        <span *ngIf="loading">Logging in...</span>
+      </button>
+
+      <mat-error *ngIf="errorMsg">
+        {{ errorMsg }}
+      </mat-error>
+
+    </form>
+
+  </mat-card>
+
+</div>

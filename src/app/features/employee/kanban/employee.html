@@ -1,0 +1,174 @@
+<div class="layout">
+  <app-header (logoutClick)="logout()">
+    Employee Dashboard
+  </app-header>
+
+  <main class="content">
+    
+    <!-- User Welcome Header -->
+    <div class="dashboard-header">
+      <div class="header-titles">
+        <h2>My Tasks Board</h2>
+      </div>
+      <div class="user-profile">
+        <div class="avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+        <div class="user-info">
+          <span class="welcome-text">Welcome back,</span>
+          <!-- ✨ Displays the current employee's username -->
+          <span class="user-name">{{ currentUser()?.username || 'Employee' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban Board (Wrapped in cdkDropListGroup to link columns together) -->
+    <div class="kanban-board" cdkDropListGroup>
+      
+      <!-- TODO Column -->
+      @let todoList = todo();
+      <div class="kanban-column todo-col">
+        <div class="column-header">
+          <div class="col-title"><span class="dot todo-dot"></span> TODO</div>
+          <span class="task-count">{{todoList.length}}</span>
+        </div>
+
+        <div class="task-list"
+          cdkDropList
+          id="TODO"
+          [cdkDropListData]="todoList"
+          (cdkDropListDropped)="drop($event)">
+          @for(task of todoList; track task.id) {
+            <mat-card class="task-card" cdkDrag (click)="openTask(task)">
+              <div class="task-title">{{task.title}}</div>
+              <div class="task-desc">{{task.description}}</div>
+              
+              <div class="task-footer">
+                <div class="badges-container">
+                  <div class="date-badge created" matTooltip="Created Date">
+                    <mat-icon>play_circle_outline</mat-icon>
+                    Start: {{ task.startDate ? (task.startDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <!-- Points to task.eta now -->
+                  <div class="date-badge eta" [ngClass]="{'has-eta': task.dueDate}" matTooltip="Due Date">
+                    <mat-icon>flag</mat-icon>
+                    Due: {{ task.dueDate ? (task.dueDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <!-- New Difficulty Badge -->
+                  @if (task.difficulty) {
+                    <div class="date-badge difficulty" [ngClass]="task.difficulty" matTooltip="Difficulty">
+                      <mat-icon>trending_up</mat-icon>
+                      {{task.difficulty}}
+                    </div>
+                  }
+                </div>
+              </div>
+            </mat-card>
+          }
+        </div>
+      </div>
+
+      <!-- IN PROGRESS Column -->
+      @let progressList = progress();
+      <div class="kanban-column progress-col">
+        <div class="column-header">
+          <div class="col-title"><span class="dot progress-dot"></span> IN PROGRESS</div>
+          <span class="task-count">{{progressList.length}}</span>
+        </div>
+
+        <div class="task-list" cdkDropList id="IN_PROGRESS" [cdkDropListData]="progressList" (cdkDropListDropped)="drop($event)">
+          @for(task of progressList; track task.id) {
+            <mat-card class="task-card" cdkDrag (click)="openTask(task)">
+              <div class="task-title">{{task.title}}</div>
+              <div class="task-desc">{{task.description}}</div>
+              
+              <div class="task-footer">
+                <div class="badges-container">
+                  <div class="date-badge created" matTooltip="Created Date">
+                    <mat-icon>play_circle_outline</mat-icon>
+                    Start: {{ task.startDate ? (task.startDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <!-- Points to task.eta now -->
+                  <div class="date-badge eta" [ngClass]="{'has-eta': task.dueDate}" matTooltip="Due Date">
+                    <mat-icon>flag</mat-icon>
+                    Due Date: {{ task.dueDate ? (task.dueDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <!-- New Difficulty Badge -->
+                  @if (task.difficulty) {
+                    <div class="date-badge difficulty" [ngClass]="task.difficulty" matTooltip="Difficulty">
+                      <mat-icon>trending_up</mat-icon>
+                      {{task.difficulty}}
+                    </div>
+                  }
+                </div>
+              </div>
+            </mat-card>
+          }
+        </div>
+      </div>
+
+      <!-- DONE Column -->
+      @let doneList = done();
+      <div class="kanban-column done-col">
+        <div class="column-header">
+          <div class="col-title"><span class="dot done-dot"></span> DONE</div>
+          <span class="task-count">{{doneList.length}}</span>
+        </div>
+
+        <div class="task-list" cdkDropList id="DONE"[cdkDropListData]="doneList" (cdkDropListDropped)="drop($event)">
+          @for(task of doneList; track task.id) {
+            <mat-card class="task-card" cdkDrag (click)="openTask(task)">
+              <div class="task-title">{{task.title}}</div>
+              <div class="task-desc">{{task.description}}</div>
+              
+              <div class="task-footer">
+                <div class="badges-container">
+                  <div class="date-badge created" matTooltip="Created Date">
+                    <mat-icon>play_circle_outline</mat-icon>
+                    Start: {{ task.startDate ? (task.startDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <div class="date-badge eta" [ngClass]="{'has-eta': task.dueDate}" matTooltip="Due Date">
+                    <mat-icon>flag</mat-icon>
+                    Due: {{ task.dueDate ? (task.dueDate | date:'MMM d, y') : 'Not Set' }}
+                  </div>
+                  
+                  <!-- Done Checkmark -->
+                  <div class="date-badge eta success" matTooltip="Completed">
+                    <mat-icon>check_circle</mat-icon>
+                    Done
+                  </div>
+
+                  <!-- Difficulty Badge -->
+                  @if (task.difficulty) {
+                    <div class="date-badge difficulty" [ngClass]="task.difficulty" matTooltip="Difficulty">
+                      <mat-icon>trending_up</mat-icon>
+                      {{task.difficulty}}
+                    </div>
+                  }
+                </div>
+              </div>
+            </mat-card>
+          }
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Logout Dialog Template -->
+<ng-template #logoutDialog>
+  <h2 mat-dialog-title style="margin-bottom: 0;">Confirm Logout</h2>
+  <mat-dialog-content style="padding-top: 16px;">
+    Are you sure you want to logout?
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-raised-button color="warn" [mat-dialog-close]="true">Logout</button>
+  </mat-dialog-actions>
+</ng-template>

@@ -1,0 +1,514 @@
+<div class="layout">
+  <app-header (logoutClick)="logout()">
+    Admin Dashboard
+  </app-header>
+
+  <mat-sidenav-container class="dashboard-container">
+    <!-- LEFT SIDEBAR -->
+    <mat-sidenav mode="side" opened class="sidebar">
+      <mat-nav-list>
+        <button mat-list-item [class.active]="currentView === 'dashboard'"
+          (click)="setView('dashboard')">
+          <mat-icon>dashboard</mat-icon>
+          <span>Dashboard</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'create'"
+                (click)="setView('create')">
+          <mat-icon>add</mat-icon>
+          <span>Create Task</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'manage'"
+                (click)="setView('manage')">
+          <mat-icon>list</mat-icon>
+          <span>Manage Task</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'employee'"
+                (click)="setView('employee')">
+          <mat-icon>person_add</mat-icon>
+          <span>Create Employee</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'calenderView'"
+                (click)="setView('calenderView')">
+          <mat-icon>calendar_today</mat-icon>
+          <span>Calendar</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'deleted'"
+                (click)="setView('deleted')">
+          <mat-icon>delete_outline</mat-icon>
+          <span>Deleted Tasks</span>
+        </button>
+
+        <button mat-list-item [class.active]="currentView === 'empManagement'"
+                (click)="setView('empManagement')">
+          <mat-icon>people</mat-icon>
+          <span>Employee Management</span>
+        </button>
+      </mat-nav-list>
+    </mat-sidenav>    
+    
+    <!-- RIGHT FILTER DRAWER -->
+    <mat-sidenav position="end" mode="over" class="filter-sidebar" 
+                 [opened]="showFilters()" 
+                 (openedChange)="showFilters.set($event)">
+      <div class="filter-sidebar-header">
+        <h3>Filter Tasks</h3>
+        <button mat-icon-button (click)="showFilters.set(false)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="filter-sidebar-content">
+        <mat-form-field appearance="outline">
+          <mat-label>Filter Employee</mat-label>
+          <mat-select [ngModel]="filterEmployee()" (ngModelChange)="filterEmployee.set($event)">
+            <mat-option [value]="null">All Employees</mat-option>
+            <mat-option *ngFor="let emp of employeesList()" [value]="emp.id">{{emp.username}}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Filter Status</mat-label>
+          <mat-select [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)">
+            <mat-option value="">All Statuses</mat-option>
+            <mat-option value="TODO">TODO</mat-option>
+            <mat-option value="IN_PROGRESS">IN PROGRESS</mat-option>
+            <mat-option value="DONE">DONE</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Filter Start Date</mat-label>
+          <input matInput [matDatepicker]="filterStart" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event)">
+          <mat-datepicker-toggle matIconSuffix [for]="filterStart"></mat-datepicker-toggle>
+          <mat-datepicker #filterStart></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Filter Due Date</mat-label>
+          <input matInput [matDatepicker]="filterDue"[ngModel]="filterDueDate()" (ngModelChange)="filterDueDate.set($event)">
+          <mat-datepicker-toggle matIconSuffix [for]="filterDue"></mat-datepicker-toggle>
+          <mat-datepicker #filterDue></mat-datepicker>
+        </mat-form-field>
+        
+        <button mat-stroked-button color="warn" (click)="clearFilters()">Clear Filters</button>
+        <button mat-raised-button color="primary" (click)="showFilters.set(false)">View Results</button>
+      </div>
+    </mat-sidenav>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <mat-sidenav-content class="content">
+      @if (currentView === 'dashboard') {
+          <div class="stats">
+            <mat-card class="stat-card todo">
+              <span class="stat-label">To Do</span>
+              <span class="stat-value">{{stats().todo || 0}}</span>
+            </mat-card>
+            <mat-card class="stat-card progress">
+              <span class="stat-label">In Progress</span>
+              <span class="stat-value">{{stats().progress || 0}}</span>
+            </mat-card>
+            <mat-card class="stat-card done">
+              <span class="stat-label">Done</span>
+              <span class="stat-value">{{stats().done || 0}}</span>
+            </mat-card>
+          </div>
+      }
+      
+      @if (currentView === 'create') {
+        <mat-card class="form-card">
+          <h3>Create New Task</h3>
+          <div class="form-wrapper">
+            <form (ngSubmit)="create()" autocomplete="off">
+              <mat-form-field appearance="outline">
+                <mat-label>Title</mat-label>
+                <input matInput [(ngModel)]="title" name="title" autocomplete="off">
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <input matInput [(ngModel)]="description" name="description" autocomplete="off">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Assign Employee</mat-label>
+                <mat-select [(ngModel)]="assignedTo" name="assignedTo" multiple disableOptionCentering panelClass="custom-dropdown">
+                  <mat-option *ngFor="let emp of employeesList()" [value]="emp.id">
+                    {{emp.username}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input matInput [min]="today" [matDatepicker]="startPicker" [(ngModel)]="startDate" name="startDate">
+                <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Due Date</mat-label>
+                <input matInput [min]="startDate || today" [matDatepicker]="duePicker" [(ngModel)]="dueDate" name="dueDate">
+                <mat-datepicker-toggle matIconSuffix [for]="duePicker"></mat-datepicker-toggle>
+                <mat-datepicker #duePicker></mat-datepicker> 
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Difficulty</mat-label>
+                <mat-select [(ngModel)]="difficulty" name="difficulty">
+                  <mat-option value="Easy">Easy</mat-option>
+                  <mat-option value="Medium">Medium</mat-option>
+                  <mat-option value="Hard">Hard</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-raised-button color="primary" type="submit">
+                Create Task
+              </button>
+            </form>
+          </div>
+        </mat-card>
+      }
+      
+      @if (currentView === 'manage') {
+        <div class="table-container">
+          <!-- Collapsible Header with Filter Icon -->
+          <mat-card class="manage-tasks-card">
+            <div class="manage-tasks-header">
+              <h3 class="manage-tasks-title">Manage Tasks</h3>
+              <button mat-icon-button color="primary" (click)="toggleFilters()" matTooltip="Filter Tasks">
+                <mat-icon>filter_list</mat-icon>
+              </button>
+            </div>
+          </mat-card>
+
+          <!-- Cleaner Display-Only Table -->
+          <table mat-table [dataSource]="filteredManageTasks()" class="styled-table">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let t" class="title-cell"> {{t.title}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let t"> {{t.status}} </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="startDate">
+              <th mat-header-cell *matHeaderCellDef> Start Date </th>
+              <td mat-cell *matCellDef="let t">
+                {{t.startDate ? (t.startDate | date:'mediumDate') : '-'}}
+              </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef> Due Date </th>
+              <td mat-cell *matCellDef="let t">
+                {{t.dueDate ? (t.dueDate | date:'mediumDate') : '-'}}
+              </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="employee">
+              <th mat-header-cell *matHeaderCellDef> Employee </th>
+              <td mat-cell *matCellDef="let t">
+                {{t.assignedUsers?.length ? t.assignedUsers.join(', ') : 'Unassigned'}}
+              </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let t">
+                <!-- Stop propagation so the trash button doesn't open the dialog -->
+                <button mat-icon-button color="warn" (click)="$event.stopPropagation(); confirmRemove(t.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['title','employee','status','startDate','dueDate','actions']"></tr>
+            <!-- Make row clickable -->
+            <tr mat-row *matRowDef="let row; columns:['title','employee','status','startDate','dueDate','actions']"
+                (click)="viewTaskDetails(row)"
+                class="clickable-row">
+            </tr>
+          </table>
+        </div>
+      }
+      
+      @if (currentView == 'employee') {
+        <mat-card class="form-card">
+          <h3>Create Employee</h3>
+          <div class="form-wrapper">
+            <form (ngSubmit)="createEmployee(employeeForm)" #employeeForm="ngForm">
+              <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput [(ngModel)]="empUsername" name="empUsername">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" [(ngModel)]="empPassword" name="empPassword">
+              </mat-form-field>
+
+              <button mat-raised-button color="accent" type="submit">
+                Create Employee
+              </button>
+            </form>
+          </div>
+        </mat-card>
+      }
+      
+      @if (currentView === 'calenderView') {
+        <div class="calendar-layout">
+          <mat-card class="calendar-card">
+            <mat-calendar 
+              [selected]="selectedDate()" 
+              (selectedChange)="$event && selectedDate.set($event)"
+              [dateClass]="dateClass">
+            </mat-calendar>
+          </mat-card>
+        
+          <mat-card class="calendar-tasks-card">
+            <h3>Tasks on {{selectedDate() | date}}</h3>
+            <mat-divider></mat-divider>
+            <!-- IF TASKS EXIST -->
+            @if (tasksByDate().length > 0) {
+              <div class="task-list">
+                <div class="task-item" *ngFor="let t of tasksByDate()">
+                  <span class="task-title">{{t.title}}</span>
+                  <span class="task-badge" [ngClass]="t.status">{{t.status}}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="empty-state">
+                <mat-icon>event_busy</mat-icon>
+                <p>No tasks available on this date.</p>
+              </div>
+            }
+          </mat-card>
+        </div>
+      }
+
+      @if (currentView === 'deleted') {
+        <div class="table-container">
+          <mat-card class="form-card section-header-card">
+            <h3>Deleted Tasks</h3>
+          </mat-card>
+          <table mat-table [dataSource]="deletedTasks()">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let t"> {{t.title}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let t"> {{t.status}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="employee">
+              <th mat-header-cell *matHeaderCellDef> Employees </th>
+              <td mat-cell *matCellDef="let t"> {{t.assignedUsers?.join(', ') || 'Unassigned'}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="deletedAt">
+              <th mat-header-cell *matHeaderCellDef> Deleted At </th>
+              <td mat-cell *matCellDef="let t"> {{t.deletedAt | date:'medium'}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['title','employee','status','deletedAt']"></tr>
+            <tr mat-row *matRowDef="let row; columns:['title','employee','status','deletedAt']"></tr>
+          </table>
+        </div>
+      }
+
+      @if (currentView === 'empManagement') {
+        <div class="table-container">
+          <mat-card class="form-card section-header-card">
+            <h3>Employee Management</h3>
+          </mat-card>
+          <table mat-table [dataSource]="employeeManagementData()">
+            <ng-container matColumnDef="username">
+              <th mat-header-cell *matHeaderCellDef>Employee Username</th>
+              <td mat-cell *matCellDef="let e"> {{e.username}} </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="taskCount">
+              <th mat-header-cell *matHeaderCellDef> Active Tasks Count </th>
+              <td mat-cell *matCellDef="let e">
+                <span class="task-count" [ngClass]="e.taskCount === 0 ? 'text-danger' : 'text-success'">
+                  {{e.taskCount}}
+                </span>
+              </td>
+            </ng-container>
+            
+            <ng-container matColumnDef="tasksList">
+              <th mat-header-cell *matHeaderCellDef> Tasks Assigned </th>
+              <td mat-cell *matCellDef="let e">
+                <div *ngIf="e.tasks.length > 0">
+                  <div *ngFor="let t of e.tasks" class="emp-task-item">
+                    • {{t.title}} <span class="emp-task-status">({{t.status}})</span>
+                  </div>
+                </div>
+                <div *ngIf="e.tasks.length === 0" class="emp-task-empty">
+                  No active tasks
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['username','taskCount','tasksList']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['username','taskCount','tasksList']"></tr>
+          </table>
+        </div>
+      }
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
+
+<!-- TEMPLATES -->
+<ng-template #logoutDialog>
+  <h2 mat-dialog-title class="dialog-title">Confirm Logout</h2>
+  <mat-dialog-content class="dialog-content">
+    Are you sure you want to logout?
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-raised-button color="warn" [mat-dialog-close]="true">Logout</button>
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #taskDetailsDialog>
+  <h2 mat-dialog-title class="dialog-title">Task Details: {{selectedTask?.title}}</h2>
+  
+  <!-- EVERYTHING MUST GO INSIDE mat-dialog-content TO BE SCROLLABLE -->
+  <mat-dialog-content class="dialog-content task-details-content">
+    @if (selectedTask) {
+      @if (!isEditMode()) {
+        <!-- VIEW MODE -->
+        <p class="dialog-detail-row"><strong>Description:</strong> {{selectedTask.description || 'N/A'}}</p>
+        <p class="dialog-detail-row"><strong>Status:</strong> {{selectedTask.status}}</p>
+        <p class="dialog-detail-row"><strong>Difficulty:</strong> {{selectedTask.difficulty || 'N/A'}}</p>
+        <p class="dialog-detail-row"><strong>Start Date:</strong> {{selectedTask.startDate ? (selectedTask.startDate | date:'mediumDate') : '-'}}</p>
+        <p class="dialog-detail-row"><strong>Due Date:</strong> {{selectedTask.dueDate ? (selectedTask.dueDate | date:'mediumDate') : '-'}}</p>
+        <p class="dialog-detail-row"><strong>Assigned Employees:</strong> {{selectedTask.assignedUsers?.join(', ') || 'Unassigned'}}</p>
+      } @else {
+        <!-- EDIT MODE -->
+        <div class="edit-form-container">
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <textarea matInput [(ngModel)]="editTaskData.description" rows="3"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="editTaskData.status">
+              <mat-option value="TODO">TODO</mat-option>
+              <mat-option value="IN_PROGRESS">IN PROGRESS</mat-option>
+              <mat-option value="DONE">DONE</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date</mat-label>
+            <input matInput [matDatepicker]="editDue" [(ngModel)]="editTaskData.dueDate">
+            <mat-datepicker-toggle matIconSuffix[for]="editDue"></mat-datepicker-toggle>
+            <mat-datepicker #editDue></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Assigned Employees</mat-label>
+            <mat-select [(ngModel)]="editTaskData.assignedUserIds" multiple>
+              <mat-option *ngFor="let emp of employeesList()" [value]="emp.id">
+                {{emp.username}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      }
+    }
+
+    <mat-divider style="margin: 24px 0;"></mat-divider>
+
+    <h3 style="margin-top:0; margin-bottom: 16px;">Comments</h3>
+
+    <!-- COMMENT LIST -->
+    <div *ngIf="comments().length > 0; else noComments" style="margin-bottom: 16px;">
+      <div *ngFor="let c of comments()" class="comment-box">
+
+        <strong>{{c.user?.username}}</strong>
+        <small style="color:gray; margin-left: 8px;">({{c.created_at | date:'short'}})</small>
+
+        <!-- VIEW MODE -->
+        <div *ngIf="editingCommentId() !== c.id">
+          <p style="margin: 8px 0;">{{c.comment}}</p>
+
+          <button mat-button color="primary"
+            *ngIf="c.user?.username === auth.user()?.username"
+            (click)="startEditComment(c)">
+            Edit
+          </button>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div *ngIf="editingCommentId() === c.id">
+          <mat-form-field appearance="outline" style="width:100%; margin-top: 8px;">
+            <textarea matInput
+              [ngModel]="editCommentText()"
+              (ngModelChange)="editCommentText.set($event)">
+            </textarea>
+          </mat-form-field>
+
+          <button mat-button color="accent" (click)="saveEditComment(c)">Save</button>
+          <button mat-button (click)="editingCommentId.set(null)">Cancel</button>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #noComments>
+      <p style="color:gray; margin-bottom: 24px;">No comments yet.</p>
+    </ng-template>
+
+    <!-- ADD COMMENT SECTION (Now inside scrollable content) -->
+    <div class="add-comment-section">
+      <mat-form-field appearance="outline" style="width:100%;">
+        <mat-label>Add Comment</mat-label>
+        <textarea matInput 
+          [ngModel]="newComment()" 
+          (ngModelChange)="newComment.set($event)" 
+          rows="2">
+        </textarea>
+      </mat-form-field>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button mat-raised-button color="primary" (click)="addComment()">
+          Add Comment
+        </button>
+      </div>
+    </div>
+
+  </mat-dialog-content>
+
+  <!-- DIALOG ACTIONS (Cancel/Save task buttons) -->
+  <mat-dialog-actions align="end" style="padding: 16px 24px;">
+    @if (!isEditMode()) {
+      <button mat-button mat-dialog-close>Close</button>
+      <button mat-raised-button color="primary" (click)="isEditMode.set(true)">Edit</button>
+    } @else {
+      <button mat-button (click)="cancelEdit()">Cancel</button>
+      <button mat-raised-button color="accent" (click)="saveTaskEdit()">Save</button>
+    }
+  </mat-dialog-actions>
+</ng-template>
+
+<ng-template #deleteConfirmDialog>
+  <h2 mat-dialog-title class="dialog-title">Confirm Deletion</h2>
+  <mat-dialog-content class="dialog-content">
+    Are you sure you want to delete this task?
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-raised-button color="warn" [mat-dialog-close]="true">Delete</button>
+  </mat-dialog-actions>
+</ng-template>
